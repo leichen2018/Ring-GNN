@@ -22,9 +22,9 @@ class MLP(nn.Module):
         
         return self.linears[-1](x)
 
-class G_invariant(nn.Module):
+class Ring_GNN(nn.Module):
     def __init__(self, nodeclasses, n_classes, avgnodenum = 10, hidden = 32, radius = 2):
-        super(G_invariant, self).__init__()
+        super(Ring_GNN, self).__init__()
         self.depth = [th.LongTensor([nodeclasses]), th.LongTensor([64]), th.LongTensor([64])]
         self.equi_modulelist = nn.ModuleList([equi_2_to_2(m, n, radius = radius, k2_init = 0.5/avgnodenum) for m, n in zip(self.depth[:-1], self.depth[1:])])
         self.prediction = MLP([th.sum(th.stack(self.depth)).item(), hidden, n_classes])
@@ -228,14 +228,14 @@ def extract_deg_adj(graph_list):
     return degs, adjs
 
 def test():
-    model = G_invariant()
+    model = Ring_GNN()
     dim = 20
     test_input = th.ones(th.Size([5, 4, 20, 20]))
     print(model(test_input))
     print('ok')
 
 def main():
-    model = G_invariant()
+    model = Ring_GNN()
     input1, input2 = input_single()
     print(model(input1))
     print(model(input1) - model(input2))

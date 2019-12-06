@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 
 from sklearn.model_selection import StratifiedKFold
 
-from model import G_invariant
+from model import Ring_GNN
 
 from gindt import GINDataset
 
@@ -88,28 +88,16 @@ def train(args, model, device, train_graphs, optimizer, epoch):
                 adj_0 = adj[i].unsqueeze(0)
             output = model(adj_0)
             labels = th.LongTensor([batch_graph[i][1]]).to(device)
-            #labels = th.LongTensor([graph[1] for graph in batch_graph]).to(device)
             loss = criterion(output, labels)/args.batch_size
 
             loss.backward()
             loss_accum += loss.detach().cpu().numpy()
-            
-        #output = model(adj)
-
-        #labels = th.LongTensor([graph[1] for graph in batch_graph]).to(device)
-
-        #compute loss
-        #loss = criterion(output, labels)
-
-        #backprop
-        #optimizer.zero_grad()
-        #loss.backward()         
+                 
         optimizer.step()
         
         loss = loss.detach().cpu().numpy()
         loss_accum += loss
 
-        #report
         pbar.set_description('epoch: %d' % (epoch))
 
     average_loss = loss_accum/total_iters
@@ -132,7 +120,6 @@ def pass_data_iteratively(args, model, graphs, device, minibatch_size = 1):
             adj_0 = adj[0].unsqueeze(0).unsqueeze(0)
         else:
             adj_0 = adj[0].unsqueeze(0)
-        #adj = th.stack([adj[0], adj[0]+th.diag(th.ones(adj[0].size()[0])).to(device), adj[0], adj[0]]).unsqueeze(0)
 
         output.append(model(adj_0).detach())
     return th.cat(output, 0)
@@ -192,13 +179,15 @@ def main():
     dev = th.device('cpu') if args.gpu < 0 else th.device('cuda:%d' % args.gpu)
 
     feats = [args.n_input] + [args.n_hidden] * (args.n_layers-1) + [args.n_classes]
-    model = G_invariant(args.nodeclasses, args.n_classes, avgnodenum = args.avgnodenum, hidden = 32, radius = args.radius).to(dev)
+    model = Ring_GNN(args.nodeclasses, args.n_classes, avgnodenum = args.avgnodenum, hidden = 32, radius = args.radius).to(dev)
 
     optimizer = getattr(optim, args.optim)(model.parameters(), lr=args.lr)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 
-    th.manual_seed(1)
-    np.random.seed(1) 
+    th.manual_seed(0)
+    np.random.seed(0) 
+    if th.cuda.is_available():
+        th.cuda.manual_seed_all(0)
 
     dataset = GINDataset(args.dataset, self_loop = False, device = dev, degree_as_nlabel=args.degree_as_nlabels)
 
