@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 
 from sklearn.model_selection import StratifiedKFold
 
-from model_rebuttal import G_invariant
+from model import G_invariant
 
 from gindt import GINDataset
 

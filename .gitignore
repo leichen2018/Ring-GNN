@@ -1,5 +1,5 @@
-hpc_outputs/
-results/
+src/hpc_outputs/
+src/results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

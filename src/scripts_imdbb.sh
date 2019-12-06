@@ -1,4 +1,4 @@
-python train_rebuttal.py \
+python train.py \
 --n-epochs 150 \
 --lr 0.001 \
 --iters-per-epoch 15 \
